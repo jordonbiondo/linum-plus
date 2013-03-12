@@ -4,8 +4,8 @@
 
 ;; Author: ahei <ahei0802@gmail.com>
 ;; Keywords: line number
-;; URL: http://code.google.com/p/dea/source/browse/trunk/my-lisps/linum%2B.el
-;; Time-stamp: <2010-04-08 10:55:43 Thursday by ahei>
+;; URL: http://github.com/jordonbiondo/linum-plus
+;; Time-stamp: <2013-03-12 01:06:59 Jordon>
 
 ;; This  file is free  software; you  can redistribute  it and/or
 ;; modify it under the terms of the GNU General Public License as
@@ -46,6 +46,8 @@
 
 ;;; History:
 ;;
+;; 2013-03-11
+;;      * Added current line highlighting
 ;; 2010-04-04
 ;;      * Add more format control for linum-format
 ;; 2010-4-1
@@ -73,7 +75,7 @@
 + or `smart' to smart adapt the width by current max visible line number.
 + or `dynamic' to adapt the width as needed,
 + or a vector with one string element which uesed to generate
-  line number format by `format' with argument max visible line number 
+  line number format by `format' with argument max visible line number
   of current buffer, see example `linum+-smart-format'
 + or a list with one string element which uesed to generate
   line number format by `format' with argument max line number of current buffer,
