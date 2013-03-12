@@ -1,4 +1,4 @@
 * Linum+ extended
-** Additional Features
-   - hl current line
-     [[http://i.imgur.com/OAGiVwV.png]]
+** Added Features
+*** highlighting current line:
+[[http://i.imgur.com/OAGiVwV.png]]
