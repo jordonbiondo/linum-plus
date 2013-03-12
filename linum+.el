@@ -54,10 +54,16 @@
 ;;; Code:
 
 (require 'linum)
-
+(set-face-foreground 'linum (face-foreground 'font-lock-comment-face))
 (defgroup linum+ nil
   "Extension of `linum-mode'."
   :prefix "linum+-")
+
+(defface linum+-current-line-face
+  '((t :inherit font-lock-preprocessor-face))
+  "Face for displaying the current line number in the display margin."
+  :group 'linum)
+
 
 ;;;###autoload
 (defcustom linum-format 'smart
@@ -82,13 +88,13 @@ See also `linum-before-numbering-hook'."
 (setq linum-format 'smart)
 
 ;;;###autoload
-(defcustom linum+-dynamic-format "%%%dd|"
+(defcustom linum+-dynamic-format "%%%dd"
   "Format used to generate line number format when `linum-format' is `dynamic'."
   :group 'linum+
   :type 'sexp)
 
 ;;;###autoload
-(defcustom linum+-smart-format "%%%dd|"
+(defcustom linum+-smart-format "%%%dd"
   "Format used to generate line number format when `linum-format' is `smart'."
   :group 'linum+
   :type 'sexp)
@@ -120,38 +126,42 @@ See also `linum-before-numbering-hook'."
 ;;;###autoload
 (defun linum-update-window (win)
   "Update line numbers for the portion visible in window WIN."
-  (goto-char (window-start win))
-  (let* ((line (line-number-at-pos))
-         (limit (window-end win t))
-         (fmt (linum+-generate-linum-format linum-format limit))
-         (width 0))
-    (run-hooks 'linum-before-numbering-hook)
-    ;; Create an overlay (or reuse an existing one) for each
-    ;; line visible in this window, if necessary.
-    (while (and (not (eobp)) (<= (point) limit))
-      (let* ((str (if fmt
-                      (propertize (format fmt line) 'face 'linum)
-                    (funcall linum-format line)))
-             (visited (catch 'visited
-                        (dolist (o (overlays-in (point) (point)))
-                          (when (equal-including-properties
-                                 (overlay-get o 'linum-str) str)
-                            (unless (memq o linum-overlays)
-                              (push o linum-overlays))
-                            (setq linum-available (delq o linum-available))
-                            (throw 'visited t))))))
-        (setq width (max width (length str)))
-        (unless visited
-          (let ((ov (if (null linum-available)
-                        (make-overlay (point) (point))
-                      (move-overlay (pop linum-available) (point) (point)))))
-            (push ov linum-overlays)
-            (overlay-put ov 'before-string
-                         (propertize " " 'display `((margin left-margin) ,str)))
-            (overlay-put ov 'linum-str str))))
-      (forward-line)
-      (setq line (1+ line)))
-    (set-window-margins win width)))
+  (let ((init-line (line-number-at-pos)))
+    (goto-char (window-start win))
+    (let* ((line (line-number-at-pos))
+	   (limit (window-end win t))
+	   (fmt (linum+-generate-linum-format linum-format limit))
+	   (width 0))
+      (run-hooks 'linum-before-numbering-hook)
+      ;; Create an overlay (or reuse an existing one) for each
+      ;; line visible in this window, if necessary.
+      (while (and (not (eobp)) (<= (point) limit))
+	(let* ((str (if fmt
+			(propertize (format fmt line) 'face
+				    (if (equal line init-line)
+					'linum+-current-line-face
+				      'linum))
+		      (funcall linum-format line)))
+	       (visited (catch 'visited
+			  (dolist (o (overlays-in (point) (point)))
+			    (when (equal-including-properties
+				   (overlay-get o 'linum-str) str)
+			      (unless (memq o linum-overlays)
+				(push o linum-overlays))
+			      (setq linum-available (delq o linum-available))
+			      (throw 'visited t))))))
+	  (setq width (max width (length str)))
+	  (unless visited
+	    (let ((ov (if (null linum-available)
+			  (make-overlay (point) (point))
+			(move-overlay (pop linum-available) (point) (point)))))
+	      (push ov linum-overlays)
+	      (overlay-put ov 'before-string
+			   (propertize " " 'display `((margin left-margin) ,str)))
+	      (overlay-put ov 'linum-str str))))
+	(forward-line)
+	(setq line (1+ line)))
+      (set-window-margins win width))))
 
 (provide 'linum+)
 
