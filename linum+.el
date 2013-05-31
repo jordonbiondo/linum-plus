@@ -56,16 +56,34 @@
 ;;; Code:
 
 (require 'linum)
+
 (set-face-foreground 'linum (face-foreground 'font-lock-comment-face))
+
 (defgroup linum+ nil
   "Extension of `linum-mode'."
   :prefix "linum+-")
+
+
+(defun linum+-hl-current-line-selector(candidate current)
+  "Built in `linum+' face selector that applys the face `linum+-current-line-face' to the current line, and the `linum' face to the rest. See Also: `linum+-face-selector-function'"
+  (if (equal candidate current) 'linum+-current-line-face 'linum))
 
 (defface linum+-current-line-face
   '((t :inherit font-lock-preprocessor-face))
   "Face for displaying the current line number in the display margin."
   :group 'linum)
 
+(defun linum+-standard-face-selector(candidate current)
+  "Built in `linum+' face selector that always applys the the face `linum'"
+  'linum)
+
+(defun linum+-crazy-face-selector(candidate current)
+  (nth (random (length (face-list))) (face-list)))
+
+
+(defvar linum+-face-selector-function 'linum+-standard-face-selector
+  "A function used to select which face to apply to a line. A selector function
+should receive two arguments: a number representing the line to be colored and a number which will be the line at `point' for reference." )
 
 ;;;###autoload
 (defcustom linum-format 'smart
@@ -140,9 +158,7 @@ See also `linum-before-numbering-hook'."
       (while (and (not (eobp)) (<= (point) limit))
 	(let* ((str (if fmt
 			(propertize (format fmt line) 'face
-				    (if (equal line init-line)
-					'linum+-current-line-face
-				      'linum))
+				    (apply linum+-face-selector-function '(line init-line)))
 		      (funcall linum-format line)))
 	       (visited (catch 'visited
 			  (dolist (o (overlays-in (point) (point)))
@@ -164,6 +180,8 @@ See also `linum-before-numbering-hook'."
 	(forward-line)
 	(setq line (1+ line)))
       (set-window-margins win width))))
+
+
 
 (provide 'linum+)
 
